@@ -1,6 +1,15 @@
 [package]
-name = "Harmonia"
-version = "0.1.0"
+name = "harmonia"
+version = "1.0.0"
 edition = "2021"
 
 [dependencies]
+clap = "4.0"
+rodio = "0.14"
+walkdir = "2.3"
+dirs = "4.0"
+whoami = "1.2"
+
+[[bin]]
+name = "harmonia"
+path = "src/main.rs"
