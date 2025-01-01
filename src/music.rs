@@ -3,7 +3,9 @@ mod albums;
 mod artists;
 
 use std::fs;
-
+use std::fs::File;
+use rodio::{Decoder, OutputStream, Sink};
+use rodio::Source;
 
 pub fn play_song(song: &str) {
     println!("Playing song: {}", song);
@@ -13,15 +15,34 @@ pub fn play_song(song: &str) {
 
     // Search for the song in the directory
     let song_path = find_song_in_dir(&music_dir, song);
-    
+
     match song_path {
         Some(path) => {
-            println!("Found song at: {}", path.display());
-            // Add code to play the song here, e.g., using a library like rodio
+
+            // Open the audio file
+            let file = File::open(&path).expect("Failed to open the audio file");
+
+            // Create an output stream to play audio
+            let (_stream, stream_handle) = OutputStream::try_default().expect("Failed to create output stream");
+
+            // Decode the audio file into a source (this automatically supports .wav, .mp3, etc.)
+            let source = Decoder::new(file).expect("Failed to decode the audio file");
+
+            // Create a Sink to play the decoded source
+            let sink = Sink::try_new(&stream_handle).expect("Failed to create audio sink");
+
+            // Append the source (audio data) to the sink for playback
+            sink.append(source.amplify(0.5));
+
+            // This will automatically play and block the thread until the audio finishes
+            println!("Playing. Press Ctrl+C to stop.");
+            sink.sleep_until_end(); // Wait until the audio finishes playing
+
+            println!("Finished playing '{}'.", song);
         },
         None => {
             println!("Song '{}' not found.", song);
-        },
+        }
     }
 }
 
@@ -56,14 +77,47 @@ fn find_song_in_dir(dir: &str, search_term: &str) -> Option<std::path::PathBuf> 
     None // Return None if no matching song is found
 }
 
-pub fn pause_music() {
-    println!("Pausing music.");
-    // Add pause functionality here
-}
-
-pub fn stop_music() {
+pub fn stop_music(song: &str) {
     println!("Stopping music.");
     // Add stop functionality here
+     println!("Playing song: {}", song);                                                                             
+                                                                                                                     
+     // Specify the directory where your songs are stored                                                            
+     let music_dir = dir::main(); // Change this path as needed                                                      
+                                                                                                                     
+     // Search for the song in the directory                                                                         
+     let song_path = find_song_in_dir(&music_dir, song);                                                             
+                                                                                                                     
+     match song_path {                                                                                               
+         Some(path) => {                                                                                             
+             println!("Found song at: {}", path.display());                                                          
+                                                                                                                     
+             // Open the audio file                                                                                  
+             let file = File::open(&path).expect("Failed to open the audio file");                                   
+                                                                                                                     
+             // Create an output stream to play audio                                                                
+             let (_stream, stream_handle) = OutputStream::try_default().expect("Failed to create output stream"); 
+                                                                                                                  
+             // Decode the audio file into a source (this automatically supports .wav, .mp3, etc.)                
+             let source = Decoder::new(file).expect("Failed to decode the audio file");                           
+                                                                                                                  
+             // Create a Sink to play the decoded source                                                          
+             let sink = Sink::try_new(&stream_handle).expect("Failed to create audio sink");                      
+            
+            println!("Playing. Press Ctrl+C to stop.");                                                          
+
+            // Append the source (audio data) to the sink for playback                                            
+            sink.append(source.repeat_infinite());                                                                                  
+                                                                                                                  
+             // This will automatically play and block the thread until the audio finishes                        
+             sink.sleep_until_end(); // Wait until the audio finishes playing                                     
+                                                                                                                  
+             println!("Finished playing '{}'.", song);                                                            
+         },                                                                                                       
+         None => {                                                                                                
+             println!("Song '{}' not found.", song);                                                              
+         }                                                                                                        
+     }                                                                                                            
 }
 
 pub fn play_album(album: &str) {                                                                                   
@@ -81,17 +135,14 @@ pub fn play_album(album: &str) {
     }                                                                                                              
 }
 
-pub fn play_artist(artist: &str) {             
-    // Define the root directory where albums are stored (assuming a structure where albums are in subdirectories)           
-    let root_dir = dir::main(); // You should replace this with the actual path to your Harmonia directory                   
-                                                                                                                             
-    // Call the function to find the album                                                                                   
-    if let Some(artist_path) = artists::find_artist_in_dir(&root_dir, artist) {                                                  
-        println!("artist found: {}", artist);                                                                                  
-                                                                                                                             
-        // Now print the songs in the album directory                                                                        
-        artists::print_albums_in_artist(&artist_path);                                                                           
-    } else {                                                                                                                 
-        println!("artist '{}' not found.", artist);                                                                            
-    }                                                                                                                        
-}                                              
+pub fn artist(artist: &str) {
+    let root_dir = dir::main();
+    if let Some(artist_path) = artists::find_artist_in_dir(&root_dir, artist) {
+        
+        let (albums, songs) = artists::artist_details(&artist_path);
+
+        println!("- {} with: {} albums and {} songs.", artist, albums, songs);
+    } else {
+        print!("artist not found.");
+    }
+}

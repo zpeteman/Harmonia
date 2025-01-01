@@ -25,21 +25,41 @@ pub fn find_artist_in_dir(dir: &str, album_name: &str) -> Option<String> {
     None // Return None if no matching album is found                                                               
 }                                                                                                                   
                                                                                                                     
-pub fn print_albums_in_artist(album_path: &str) {                                                                     
-    // Read the contents of the album directory                                                                     
-    let entries = fs::read_dir(album_path).expect("Failed to read artist directory");                                
-                                                                                                                    
-    for entry in entries {                                                                                          
-        match entry {                                                                                               
-            Ok(entry) => {                                                                                          
-                let path = entry.path();                                                                            
+pub fn artist_details(album_path: &str) -> (usize, usize) {
+    // Read the contents of the album directory
+    let entries = fs::read_dir(album_path).expect("Failed to read artist directory");
+
+    let mut albums = 0;
+    let mut songs = 0;
+
+    for entry in entries {
+        match entry {
+            Ok(entry) => {
+                let path = entry.path();
                 if path.is_dir() {
-                    if let Some(album_name) = path.file_stem().and_then(|name| name.to_str()) { 
-                        println!("- {}", album_name);                                           
-                    }                                                                          
-                }                                                                                                   
-            },                                                                                                      
-            Err(_) => continue, // Ignore any errors in reading directory entries                                   
-        }                                                                                                           
-    }                                                                                                               
-}   
+                    albums += 1;
+
+                    let new_entries = fs::read_dir(&path).expect("Failed to read album directory.");
+                    for i in new_entries {
+                        match i {
+                            Ok(i) => {
+                                let new_path = i.path();
+                                if new_path.is_file() {
+                                    if let Some(exp) = new_path.extension().and_then(|ext| ext.to_str()) {
+                                        if ["mp3", "wav", "flac", "aac"].contains(&exp) {
+                                            songs += 1;
+                                        }
+                                    }
+                                }
+                            }
+                            Err(_) => continue, // Ignore errors in reading files
+                        }
+                    }
+                }
+            }
+            Err(_) => continue, // Ignore any errors in reading directory entries
+        }
+    }
+
+    (albums, songs)
+}

@@ -1,4 +1,7 @@
 use std::fs::{self};
+use std::fs::File;                        
+use rodio::{Decoder, OutputStream, Sink}; 
+use rodio::Source;                        
 
 pub fn find_album_in_dir(dir: &str, album_name: &str) -> Option<String> { 
     // Read the contents of the directory
@@ -42,11 +45,28 @@ pub fn print_songs_in_album(album_path: &str) {
                 // If it's a file, check its extension and print the song name
                 if path.is_file() {
                     if let Some(extension) = path.extension().and_then(|ext| ext.to_str()) {
-                        
-                        if ["mp3", "wav", "flac", "acc"].contains(&extension) {
-                            if let Some(song_name) = path.file_stem().and_then(|name| name.to_str()) {
-                                println!("- {}", song_name);
-                            }
+                        println!("to quite use Cntr C."); 
+                        if ["wav"].contains(&extension) {
+                           if let Some(album_name) = path.file_stem().and_then(|name| name.to_str()) {  
+                               println!("- playing {}", album_name);                                            
+                           }                                                                            
+                           // Open the audio file                                                                               
+                           let file = File::open(&path).expect("Failed to open the audio file");                                
+                                                                                                                                
+                           // Create an output stream to play audio                                                             
+                           let (_stream, stream_handle) = OutputStream::try_default().expect("Failed to create output stream"); 
+                                                                                                                                
+                           // Decode the audio file into a source (this automatically supports .wav, .mp3, etc.)                
+                           let source = Decoder::new(file).expect("Failed to decode the audio file");                           
+                                                                                                                                
+                           // Create a Sink to play the decoded source                                                          
+                           let sink = Sink::try_new(&stream_handle).expect("Failed to create audio sink");                      
+                                                                                                                                
+                           // Append the source (audio data) to the sink for playback                                           
+                           sink.append(source.amplify(0.5));                                                                                 
+                                                                                                                                
+                           // This will automatically play and block the thread until the audio finishes                        
+                           sink.sleep_until_end(); // Wait until the audio finishes playing                                     
                         }
                     }
                 } else if path.is_dir() {

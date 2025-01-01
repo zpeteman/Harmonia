@@ -374,6 +374,7 @@ version = "1.0.0"
 dependencies = [
  "clap",
  "dirs",
+ "hound",
  "rodio",
  "walkdir",
  "whoami",

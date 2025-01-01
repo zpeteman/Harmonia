@@ -1,6 +1,7 @@
 use clap::{Command, Arg};
 mod music;
 mod list;
+mod list_2;
 
 fn main() {
     let matches = Command::new("Harmonia")
@@ -9,7 +10,11 @@ fn main() {
         .about("A Command-Line Music Player")
         .subcommand(
             Command::new("-pl")
-                .about("Play something i don't know.")
+                .about("Play music. Subcommands:  
+-s   [song_name]       Play a specific song.  
+-ar  [artist_name]     Play songs by a specific artist (randomly).  
+-al  [album_name]      Play an entire album.
+")
                 .subcommand(
                     Command::new("-s")
                         .about("Play song")
@@ -26,11 +31,15 @@ fn main() {
                         .arg(Arg::new("album").help("The album name").required(true).index(1)),
                 ),
         )
-        .subcommand(Command::new("-pa").about("Pause the current song"))
-        .subcommand(Command::new("-s").about("Stop the music"))
+        .subcommand(Command::new("-lo")
+            .about("this function is used to loop a song.")
+            .arg(Arg::new("song").help("The song to play").required(true).index(1)), 
+            )
         .subcommand(
             Command::new("-l")
-                .about("List music by album or artist.")
+                .about("List music:  
+Displays songs by album or artist.  
+")
                 .arg(
                     Arg::new("name")
                         .help("The album or artist name to list songs for")
@@ -38,6 +47,18 @@ fn main() {
                         .index(1),
                 ),
         )
+        .subcommand(
+            Command::new("-ar")
+                .about("List an artist's works:  
+Shows all albums and songs by the specified artist.
+")
+                .arg(
+                    Arg::new("name")
+                        .help("the artist's name.")
+                        .required(true)
+                        .index(1),
+                    )
+            )
         .get_matches();
 
     if let Some(play_matches) = matches.subcommand_matches("-pl") {
@@ -47,7 +68,7 @@ fn main() {
             }
         } else if let Some(artist_matches) = play_matches.subcommand_matches("-ar") {
             if let Some(artist) = artist_matches.get_one::<String>("artist") {
-                music::play_artist(artist);
+                list::list(artist);
             }
         } else if let Some(album_matches) = play_matches.subcommand_matches("-al") {
             if let Some(album) = album_matches.get_one::<String>("album") {
@@ -56,146 +77,15 @@ fn main() {
         }
     } else if let Some(list_matches) = matches.subcommand_matches("-l") {
         if let Some(name) = list_matches.get_one::<String>("name") {
-            list::list(name);
+            list_2::list(name);
         }
-    } else if matches.subcommand_matches("-pa").is_some() {
-        music::pause_music();
-    } else if matches.subcommand_matches("-s").is_some() {
-        music::stop_music();
+    } else if let Some(pause) = matches.subcommand_matches("-lo") {
+        if let Some(song) = pause.get_one::<String>("song") {  
+            music::stop_music(song);
+        }
+    } else if let Some(list_matches) = matches.subcommand_matches("-ar") {
+        if let Some(name) = list_matches.get_one::<String>("name") {
+            music::artist(name);
+        }
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

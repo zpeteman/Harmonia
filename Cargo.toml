@@ -5,10 +5,11 @@ edition = "2021"
 
 [dependencies]
 clap = "4.0"
-rodio = "0.14"
 walkdir = "2.3"
 dirs = "4.0"
 whoami = "1.2"
+rodio = "0.14"
+hound = "3.4"
 
 [[bin]]
 name = "harmonia"
